@@ -16,6 +16,7 @@ refuse() {
 
 for arg in "$@"; do
   case "$arg" in
+    -h|--help) echo "$usage"; exit 0 ;;
     http://*|https://*) ;;
     -*) refuse "\`$arg\` is not allowed. get takes no flags yet." ;;
     *)  refuse "\`$arg\` is not an http(s) url." ;;
