@@ -9,3 +9,23 @@ Anything it doesn't do, it refuses, and the refusal tells the agent to ask for t
 `no-curl.sh` is the matching Claude Code hook. It denies bare `curl` and points the agent at `get`.
 
 `./test` checks both.
+
+## Install
+
+Symlink both scripts somewhere on your `PATH`, then tell Claude Code about them in `~/.claude/settings.json`.
+
+```sh
+ln -s ~/Code/personal/get/get ~/.local/bin/get
+ln -s ~/Code/personal/get/no-curl.sh ~/.local/bin/no-curl.sh
+```
+
+```json
+{
+  "permissions": { "allow": ["Bash(get *)"] },
+  "hooks": {
+    "PreToolUse": [
+      { "matcher": "Bash", "hooks": [{ "type": "command", "command": "~/.local/bin/no-curl.sh" }] }
+    ]
+  }
+}
+```
