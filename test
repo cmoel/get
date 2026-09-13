@@ -31,6 +31,7 @@ accepts "https url" $U
   curl_got "$U" || flunk "url not passed to curl"
   curl_got "-L" || flunk "redirects must be followed"
   [ "$(head -1 "$CURL_ARGS")" = "-q" ] || flunk "-q must be curl's first arg"
+  curl_got "-sS" || flunk "curl must run silent but show errors"
 accepts "http url"  http://example.com/
 
 rejects "no url"

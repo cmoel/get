@@ -24,4 +24,4 @@ done
 
 # -q first: ignore ~/.curlrc so it can't add flags. --proto: no file://, ftp://, etc.
 # -L: follow redirects. --proto-redir: only to http(s), so a redirect can't leave the web either.
-exec curl -q -L --proto =http,https --proto-redir =http,https "$@"
+exec curl -q -sS -L --proto =http,https --proto-redir =http,https "$@"
