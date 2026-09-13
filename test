@@ -43,4 +43,13 @@ rejects "-- separator" -- $U
 rejects "file:// url" file:///etc/passwd
 rejects "bare host"   example.com
 
+# no-curl.sh: PreToolUse hook. Denies any Bash command mentioning curl.
+hook() { printf '{"tool_input":{"command":%s}}' "$(printf '%s' "$1" | jq -Rs .)" | ./no-curl.sh; }
+hook 'curl https://x'          | grep -q '"deny"' && pass "hook denies curl"          || flunk "hook denies curl"
+hook '/usr/bin/curl -X POST x' | grep -q '"deny"' && pass "hook denies /usr/bin/curl" || flunk "hook denies /usr/bin/curl"
+hook 'ls | xargs curl'         | grep -q '"deny"' && pass "hook denies piped curl"    || flunk "hook denies piped curl"
+hook 'curl https://x'          | grep -q 'get '   && pass "hook message names get"   || flunk "hook message names get"
+[ -z "$(hook 'get https://x')" ]       && pass "hook allows get"    || flunk "hook allows get"
+[ -z "$(hook 'git commit -m curly')" ] && pass "hook ignores curly" || flunk "hook ignores curly"
+
 [ $fail = 0 ] && echo "all passed" || { echo "FAILED"; exit 1; }
