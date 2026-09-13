@@ -1,0 +1,45 @@
+#!/bin/bash
+# Self-check for `get`. No network: a fake `curl` on PATH records its args.
+set -u
+cd "$(dirname "$0")"
+FAKE=$(mktemp -d)
+printf '#!/bin/bash\nprintf "%%s\\n" "$@" > "$CURL_ARGS"\n' > "$FAKE/curl"
+chmod +x "$FAKE/curl"
+export PATH="$FAKE:$PATH" CURL_ARGS="$FAKE/args"
+
+fail=0
+pass() { echo "ok   $1"; }
+flunk() { echo "FAIL $1"; fail=1; }
+
+rejects() { # rejects "<desc>" args...  -> nonzero exit, curl never called, change-request hint on stderr
+  local desc=$1; shift
+  : > "$CURL_ARGS"
+  if ./get "$@" >/dev/null 2>"$FAKE/err" || [ -s "$CURL_ARGS" ]; then flunk "$desc"; return; fi
+  grep -q "propose" "$FAKE/err" || { flunk "$desc (no change-request hint)"; return; }
+  pass "$desc"
+}
+accepts() { # accepts "<desc>" args...  -> curl called, args in $CURL_ARGS
+  local desc=$1; shift
+  : > "$CURL_ARGS"
+  if ./get "$@" >/dev/null 2>"$FAKE/err" && [ -s "$CURL_ARGS" ]; then pass "$desc"; else flunk "$desc: $(cat "$FAKE/err")"; fi
+}
+curl_got() { grep -qxF -- "$1" "$CURL_ARGS"; }
+
+U=https://example.com/
+
+accepts "https url" $U
+  curl_got "$U" || flunk "url not passed to curl"
+  curl_got "-L" || flunk "redirects must be followed"
+  [ "$(head -1 "$CURL_ARGS")" = "-q" ] || flunk "-q must be curl's first arg"
+accepts "http url"  http://example.com/
+
+rejects "no url"
+rejects "-X POST"     -X POST $U
+rejects "-d body"     -d '{}' $U
+rejects "-XPOST"      -XPOST $U
+rejects "--foo"       --foo $U
+rejects "-- separator" -- $U
+rejects "file:// url" file:///etc/passwd
+rejects "bare host"   example.com
+
+[ $fail = 0 ] && echo "all passed" || { echo "FAILED"; exit 1; }

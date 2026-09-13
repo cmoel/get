@@ -1,0 +1,27 @@
+#!/bin/bash
+# get: read-only curl. GET only. Safe to allow-list for agents.
+#
+# Usage: get <url>...
+
+usage="usage: get <url>..."
+
+refuse() {
+  echo "get: $1" >&2
+  echo "$usage" >&2
+  echo "Agent: do not work around this. Tell the user what you need and why, and propose the one-line edit to ~/Code/personal/get/get. Then wait." >&2
+  exit 64
+}
+
+[ $# -gt 0 ] || refuse "no url given"
+
+for arg in "$@"; do
+  case "$arg" in
+    http://*|https://*) ;;
+    -*) refuse "\`$arg\` is not allowed. get takes no flags yet." ;;
+    *)  refuse "\`$arg\` is not an http(s) url." ;;
+  esac
+done
+
+# -q first: ignore ~/.curlrc so it can't add flags. --proto: no file://, ftp://, etc.
+# -L: follow redirects. --proto-redir: only to http(s), so a redirect can't leave the web either.
+exec curl -q -L --proto =http,https --proto-redir =http,https "$@"
