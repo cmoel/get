@@ -43,6 +43,27 @@ rejects "-- separator" -- $U
 rejects "file:// url" file:///etc/passwd
 rejects "bare host"   example.com
 
+accepts "html by default" $U
+  curl_got '-H' && curl_got 'Accept: text/html' || flunk "default Accept: text/html not sent"
+accepts "-a application/json" -a application/json $U
+  curl_got 'Accept: application/json' || flunk "-a value not sent"
+  curl_got 'Accept: text/html' && flunk "-a must replace the default, not add to it"
+accepts "--accept text/html" --accept text/html $U
+accepts "-a text/markdown" -a text/markdown $U
+  curl_got 'Accept: text/markdown' || flunk "-a text/markdown not sent"
+accepts "-a text/plain" -a text/plain $U
+  curl_got 'Accept: text/plain' || flunk "-a text/plain not sent"
+accepts "-a application/xml" -a application/xml $U
+  curl_got 'Accept: application/xml' || flunk "-a application/xml not sent"
+rejects "-a json shorthand" -a json $U
+rejects "-a */* wildcard"   -a '*/*' $U
+rejects "-a application/javascript" -a application/javascript $U
+rejects "-a text/css"       -a text/css $U
+rejects "-a swallows the url" -a $U
+rejects "-a with nothing after" $U -a
+rejects "-aapplication/json attached" -aapplication/json $U
+rejects "-H header"  -H 'Accept: application/json' $U
+
 for h in -h --help; do
   : > "$CURL_ARGS"
   if ./get $h 2>/dev/null | grep -q '^usage:' && [ ! -s "$CURL_ARGS" ]; then pass "$h prints get's usage"; else flunk "$h prints get's usage"; fi
