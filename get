@@ -35,4 +35,5 @@ done
 
 # -q first: ignore ~/.curlrc so it can't add flags. --proto: no file://, ftp://, etc.
 # -L: follow redirects. --proto-redir: only to http(s), so a redirect can't leave the web either.
-exec curl -q -sS -L --proto =http,https --proto-redir =http,https -H "Accept: $accept" "${urls[@]}"
+# -g: no url globbing, so [1-1000] is one request, not a thousand.
+exec curl -q -sS -g -L --proto =http,https --proto-redir =http,https -H "Accept: $accept" "${urls[@]}"
