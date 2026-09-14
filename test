@@ -3,6 +3,7 @@
 set -u
 cd "$(dirname "$0")"
 FAKE=$(mktemp -d)
+trap 'rm -rf "$FAKE"' EXIT
 printf '#!/bin/bash\nprintf "%%s\\n" "$@" > "$CURL_ARGS"\n' > "$FAKE/curl"
 chmod +x "$FAKE/curl"
 export PATH="$FAKE:$PATH" CURL_ARGS="$FAKE/args"
