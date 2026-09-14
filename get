@@ -36,4 +36,6 @@ done
 # -q first: ignore ~/.curlrc so it can't add flags. --proto: no file://, ftp://, etc.
 # -L: follow redirects. --proto-redir: only to http(s), so a redirect can't leave the web either.
 # -g: no url globbing, so [1-1000] is one request, not a thousand.
-exec curl -q -sS -g -L --proto =http,https --proto-redir =http,https -H "Accept: $accept" "${urls[@]}"
+# --max-time/--max-filesize: a slow server or a huge body can't hang or flood the agent.
+# (--max-filesize only stops a body of unannounced length on curl 8.4 or newer.)
+exec curl -q -sS -g -L --proto =http,https --proto-redir =http,https --max-time 30 --max-filesize 10485760 -H "Accept: $accept" "${urls[@]}"

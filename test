@@ -24,6 +24,7 @@ accepts() { # accepts "<desc>" args...  -> curl called, args in $CURL_ARGS
   if ./get "$@" >/dev/null 2>"$FAKE/err" && [ -s "$CURL_ARGS" ]; then pass "$desc"; else flunk "$desc: $(cat "$FAKE/err")"; fi
 }
 curl_got() { grep -qxF -- "$1" "$CURL_ARGS"; }
+curl_got_pair() { grep -A1 -xF -- "$1" "$CURL_ARGS" | grep -qxF -- "$2"; } # flag followed by its value
 
 U=https://example.com/
 
@@ -33,6 +34,8 @@ accepts "https url" $U
   [ "$(head -1 "$CURL_ARGS")" = "-q" ] || flunk "-q must be curl's first arg"
   curl_got "-sS" || flunk "curl must run silent but show errors"
   curl_got "-g"  || flunk "url globbing must be off, or [1-1000] is a thousand requests"
+  curl_got_pair "--max-time" "30"           || flunk "a slow server must not hang the agent"
+  curl_got_pair "--max-filesize" "10485760" || flunk "a huge body must stop at 10 MiB"
 accepts "http url"  http://example.com/
 
 rejects "no url"
