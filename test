@@ -83,6 +83,12 @@ denies 'echo $(curl x)'
 denies 'curl'
 denies 'curl x; ls'
 denies $'ls\ncurl x'
+denies 'bash -c "curl x"'
+denies "sh -c 'curl x'"
+denies 'curl>/dev/null x'
+denies '\curl https://x'
+denies "cu''rl https://x"
+denies 'c""url https://x'
 allows 'get https://x'
 allows 'git commit -m curly'
 allows 'cat no-curl.sh'

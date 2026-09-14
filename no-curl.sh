@@ -1,14 +1,16 @@
 #!/bin/bash
-# Claude Code PreToolUse hook for Bash. Denies any command mentioning curl.
-# Agents use `get` instead (GET only). Matches the word anywhere, so a
-# "curl" inside a string is a false positive; the message says what to do.
-# A nudge, not enforcement: it's trivially bypassed.
+# Claude Code PreToolUse hook for Bash. Denies any command that runs curl.
+# Agents use `get` instead (GET only). Matches `curl` in command position
+# (line start, after | ; & ( a quote or whitespace, with or without a path), so
+# `cat no-curl.sh` passes but `echo "run curl"` is still a false positive.
+# Quotes and backslashes are dropped first, so `cu''rl` and `\curl` don't slip by.
+# A nudge, not enforcement: wget, python, or a renamed binary walk right past it.
 
 get="$(dirname "$(readlink -f "$0")")/get"
 
 COMMAND=$(jq -r '.tool_input.command // ""')
 
-echo "$COMMAND" | grep -qwF curl || exit 0
+printf '%s\n' "$COMMAND" | tr -d '\\"'"'" | grep -qE $'(^|[[:space:];&|(`"\'])([^[:space:]]*/)?curl([[:space:]]|$|[;&|)`<>"\'])' || exit 0
 
 jq -n --arg get "$get" '{
   hookSpecificOutput: {
