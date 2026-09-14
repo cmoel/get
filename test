@@ -98,4 +98,11 @@ allows 'ls'
 hook 'curl https://x' | grep -q 'get '        && pass "hook message names get"           || flunk "hook message names get"
 hook 'curl https://x' | grep -qF "$PWD/get"   && pass "hook message names get's real path" || flunk "hook message names get's real path"
 
+# Without jq, or with input it can't read, the hook can't tell what it's looking at. Fail closed: exit 2.
+mkdir "$FAKE/nojq"; for t in bash grep dirname readlink; do ln -s "$(command -v "$t")" "$FAKE/nojq/$t"; done
+PATH=$FAKE/nojq ./no-curl.sh </dev/null >/dev/null 2>"$FAKE/err"
+[ $? = 2 ] && grep -q jq "$FAKE/err" && pass "hook fails closed without jq" || flunk "hook fails closed without jq"
+printf 'not json' | ./no-curl.sh >/dev/null 2>"$FAKE/err"
+[ $? = 2 ] && [ -s "$FAKE/err" ] && pass "hook fails closed on unreadable input" || flunk "hook fails closed on unreadable input"
+
 [ $fail = 0 ] && echo "all passed" || { echo "FAILED"; exit 1; }

@@ -8,7 +8,9 @@
 
 get="$(dirname "$(readlink -f "$0")")/get"
 
-COMMAND=$(jq -r '.tool_input.command // ""')
+# Exit 2 blocks the call and shows stderr to the agent. Fail closed rather than wave curl through.
+command -v jq >/dev/null || { echo "no-curl hook: jq not found on PATH" >&2; exit 2; }
+COMMAND=$(jq -r '.tool_input.command // ""') || { echo "no-curl hook: could not parse hook input as JSON" >&2; exit 2; }
 
 printf '%s\n' "$COMMAND" | tr -d '\\"'"'" | grep -qE $'(^|[[:space:];&|(`"\'])([^[:space:]]*/)?curl([[:space:]]|$|[;&|)`<>"\'])' || exit 0
 
