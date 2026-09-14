@@ -8,8 +8,8 @@ chmod +x "$FAKE/curl"
 export PATH="$FAKE:$PATH" CURL_ARGS="$FAKE/args"
 
 fail=0
-pass() { echo "ok   $1"; }
-flunk() { echo "FAIL $1"; fail=1; }
+pass() { echo "ok   ${1//$'\n'/\\n}"; }
+flunk() { echo "FAIL ${1//$'\n'/\\n}"; fail=1; }
 
 rejects() { # rejects "<desc>" args...  -> nonzero exit, curl never called, change-request hint on stderr
   local desc=$1; shift
@@ -69,13 +69,26 @@ for h in -h --help; do
   if ./get $h 2>/dev/null | grep -q '^usage:' && [ ! -s "$CURL_ARGS" ]; then pass "$h prints get's usage"; else flunk "$h prints get's usage"; fi
 done
 
-# no-curl.sh: PreToolUse hook. Denies any Bash command mentioning curl.
+./get -X $U 2>&1 | grep -qF "$PWD/get" && pass "refusal names get's real path" || flunk "refusal names get's real path"
+
+# no-curl.sh: PreToolUse hook. Denies any Bash command that runs curl.
 hook() { printf '{"tool_input":{"command":%s}}' "$(printf '%s' "$1" | jq -Rs .)" | ./no-curl.sh; }
-hook 'curl https://x'          | grep -q '"deny"' && pass "hook denies curl"          || flunk "hook denies curl"
-hook '/usr/bin/curl -X POST x' | grep -q '"deny"' && pass "hook denies /usr/bin/curl" || flunk "hook denies /usr/bin/curl"
-hook 'ls | xargs curl'         | grep -q '"deny"' && pass "hook denies piped curl"    || flunk "hook denies piped curl"
-hook 'curl https://x'          | grep -q 'get '   && pass "hook message names get"   || flunk "hook message names get"
-[ -z "$(hook 'get https://x')" ]       && pass "hook allows get"    || flunk "hook allows get"
-[ -z "$(hook 'git commit -m curly')" ] && pass "hook ignores curly" || flunk "hook ignores curly"
+denies() { hook "$1" | grep -q '"deny"' && pass "hook denies: $1" || flunk "hook denies: $1"; }
+allows() { [ -z "$(hook "$1")" ]       && pass "hook allows: $1" || flunk "hook allows: $1"; }
+denies 'curl https://x'
+denies '/usr/bin/curl -X POST x'
+denies 'ls | xargs curl'
+denies 'cd /tmp && curl x'
+denies 'echo $(curl x)'
+denies 'curl'
+denies 'curl x; ls'
+denies $'ls\ncurl x'
+allows 'get https://x'
+allows 'git commit -m curly'
+allows 'cat no-curl.sh'
+allows 'cat curl.sh'
+allows 'ls'
+hook 'curl https://x' | grep -q 'get '        && pass "hook message names get"           || flunk "hook message names get"
+hook 'curl https://x' | grep -qF "$PWD/get"   && pass "hook message names get's real path" || flunk "hook message names get's real path"
 
 [ $fail = 0 ] && echo "all passed" || { echo "FAILED"; exit 1; }

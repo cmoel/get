@@ -1,5 +1,8 @@
 #!/bin/bash
-# get: read-only curl. GET only. Safe to allow-list for agents.
+# get: curl that only makes GET requests, so it's safe to allow-list for agents.
+# It is not a network sandbox: a GET can still reach any host or have side effects.
+
+self=$(readlink -f "$0")
 
 usage="usage: get [-a type] <url>...
   -a, --accept TYPE   what to ask for: text/html (default), application/json,
@@ -8,7 +11,7 @@ usage="usage: get [-a type] <url>...
 refuse() {
   echo "get: $1" >&2
   echo "$usage" >&2
-  echo "Agent: do not work around this. Tell the user what you need and why, and propose the one-line edit to ~/Code/personal/get/get. Then wait." >&2
+  echo "Agent: do not work around this. Tell the user what you need and why, and propose the one-line edit to $self. Then wait." >&2
   exit 64
 }
 
