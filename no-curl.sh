@@ -18,7 +18,7 @@ jq -n --arg get "$get" '{
   hookSpecificOutput: {
     hookEventName: "PreToolUse",
     permissionDecision: "deny",
-    permissionDecisionReason: "curl is blocked. Use `get <url>` (GET only)."
+    permissionDecisionReason: "curl is blocked. Use `get <url>` instead. It only makes GET requests. If `get` cannot do what you need, do not work around it: tell the user what you need and why, and propose the one-line edit to \($get). Then wait. If this was a false positive (the word curl in a string or commit message), tell the user and ask them to run the command themselves."
   },
-  systemMessage: "**curl blocked.** Use `get <url>` instead. It only makes GET requests. If `get` cannot do what you need, do not work around it: tell the user what you need and why, and propose the one-line edit to \($get). Then wait. If this was a false positive (the word curl in a string or commit message), tell the user and ask them to run the command themselves."
+  systemMessage: "**curl blocked.** Pointed the agent at `get <url>`."
 }'

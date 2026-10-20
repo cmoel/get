@@ -101,6 +101,8 @@ allows 'cat curl.sh'
 allows 'ls'
 hook 'curl https://x' | grep -q 'get '        && pass "hook message names get"           || flunk "hook message names get"
 hook 'curl https://x' | grep -qF "$PWD/get"   && pass "hook message names get's real path" || flunk "hook message names get's real path"
+# Only permissionDecisionReason reaches the agent. systemMessage is shown to the user.
+hook 'curl https://x' | jq -r .hookSpecificOutput.permissionDecisionReason | grep -q "propose" && pass "agent sees the change-request hint" || flunk "agent sees the change-request hint"
 
 # Without jq, or with input it can't read, the hook can't tell what it's looking at. Fail closed: exit 2.
 mkdir "$FAKE/nojq"; for t in bash grep dirname readlink; do ln -s "$(command -v "$t")" "$FAKE/nojq/$t"; done
