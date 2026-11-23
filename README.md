@@ -15,8 +15,8 @@ Anything it doesn't do, it refuses, and the refusal tells the agent to ask for t
 Symlink both scripts somewhere on your `PATH`, then tell Claude Code about them in `~/.claude/settings.json`.
 
 ```sh
-ln -s ~/Code/personal/get/get ~/.local/bin/get
-ln -s ~/Code/personal/get/no-curl.sh ~/.local/bin/no-curl.sh
+ln -s ~/Code/cmoel/get/get ~/.local/bin/get
+ln -s ~/Code/cmoel/get/no-curl.sh ~/.local/bin/no-curl.sh
 ```
 
 ```json
